@@ -80,9 +80,9 @@ module internal Eval
 
     let isVowel c = List.contains (System.Char.ToLower c) ['a'; 'e'; 'i'; 'o'; 'u'; 'y']
     
-    let isLetter c = System.Char.IsLetter c
+    //let isLetter c = System.Char.IsLetter c
 
-    let isDigit c = System.Char.IsDigit c
+    //let isDigit c = System.Char.IsDigit c
     let rec boolEval b : SM<bool> =
         match b with
         | TT -> ret true                

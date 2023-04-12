@@ -1,0 +1,13 @@
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.deps.json
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.dll
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/bin/Debug/net7.0/ScrabbleBot.pdb
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/bin/Debug/net7.0/ScrabbleUtil.dll
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.fsproj.AssemblyReference.cache
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.AssemblyInfoInputs.cache
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.AssemblyInfo.fs
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.fsproj.CoreCompileInputs.cache
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.fsproj.CopyComplete
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.dll
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/refint/ScrabbleBot.dll
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ScrabbleBot.pdb
+/Users/Milla/Documents/ITU/Functional-Programming/ScrabbleTemplate/ScrabbleBot/obj/Debug/net7.0/ref/ScrabbleBot.dll

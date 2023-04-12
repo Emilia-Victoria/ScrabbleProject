@@ -48,13 +48,13 @@ module internal StateMonad
     let push : SM<unit> = 
         S (fun s -> Success ((), {s with vars = Map.empty :: s.vars}))
 
-    let pop : SM<unit> = failwith "Not implemented"      
+    let pop : SM<unit> =  S (fun s -> Success ((), {s with vars = List.tail s.vars}))     
 
-    let wordLength : SM<int> = failwith "Not implemented"      
+    let wordLength : SM<int> = S (fun s -> Success (s.word.Length, s))    
 
-    let characterValue (pos : int) : SM<char> = failwith "Not implemented"      
+    let characterValue (pos : int) : SM<char> = S (fun s -> if pos < s.word.Length then Success (fst (s.word.[pos]), s) else Failure (IndexOutOfBounds pos))      
 
-    let pointValue (pos : int) : SM<int> = failwith "Not implemented"      
+    let pointValue (pos : int) : SM<int> = S (fun s -> if (pos >= 0 && (pos < s.word.Length)) then Success (snd (s.word.[pos]), s) else Failure (IndexOutOfBounds pos))           
 
     let lookup (x : string) : SM<int> = 
         let rec aux =

@@ -4,8 +4,8 @@ module internal Eval
 
     open StateMonad
 
-    let add a b = failwith "Not implemented"      
-    let div a b = failwith "Not implemented"      
+    let add a b = a >>= fun x -> b >>= (fun y -> ret (x + y))     
+    let div a b = a >>= fun x -> b >>= fun y -> if y <> 0 then ret (x/y) else fail DivisionByZero     
 
     type aExp =
         | N of int
@@ -57,11 +57,44 @@ module internal Eval
     let (.>=.) a b = ~~(a .<. b)                (* numeric greater than or equal to *)
     let (.>.) a b = ~~(a .=. b) .&&. (a .>=. b) (* numeric greater than *)    
 
-    let arithEval a : SM<int> = failwith "Not implemented"      
+    let rec arithEval a : SM<int> =
+        match a with
+        |N n -> ret n
+        |V x -> lookup x
+        |WL -> wordLength
+        |PV a -> arithEval a >>= fun x -> pointValue x
+        |Add (x,y) -> add (arithEval x) (arithEval y)
+        |Sub (x,y) -> arithEval x >>= fun x -> arithEval y >>= (fun y -> ret (x - y))
+        |Mul (x,y) -> arithEval x >>= fun x -> arithEval y >>= (fun y -> ret (x * y))
+        |Div (x,y) -> div (arithEval x) (arithEval y)
+        |Mod (x,y) -> arithEval x >>= fun x -> arithEval y >>= (fun y -> if y <> 0 then ret (x % y) else fail DivisionByZero)
+        |CharToInt c -> charEval c >>= fun x -> ret (int x)     
 
-    let charEval c : SM<char> = failwith "Not implemented"      
+    and charEval c : SM<char> =
+        match c with
+        | C c -> ret c
+        | CV a -> arithEval a >>= fun x -> characterValue x
+        | ToUpper c -> charEval c >>= fun x -> ret (System.Char.ToUpper x)
+        | ToLower c -> charEval c >>= fun x -> ret (System.Char.ToLower x)
+        | IntToChar a -> arithEval a >>= fun x -> ret (char x)     
 
-    let boolEval b : SM<bool> = failwith "Not implemented"
+    let isVowel c = List.contains (System.Char.ToLower c) ['a'; 'e'; 'i'; 'o'; 'u'; 'y']
+    
+    let isLetter c = System.Char.IsLetter c
+
+    let isDigit c = System.Char.IsDigit c
+    let rec boolEval b : SM<bool> =
+        match b with
+        | TT -> ret true                
+        | FF -> ret false
+        | AEq (x,y) -> arithEval x >>= fun x -> arithEval y >>= (fun y -> ret (x = y))
+        | ALt (x,y) -> arithEval x >>= fun x -> arithEval y >>= (fun y -> ret (x < y))
+        | Not b -> boolEval b >>= fun x -> ret (not x)
+        | Conj (x,y) -> boolEval x >>= fun x -> boolEval y >>= fun y -> ret (x && y) 
+        | IsVowel c -> charEval c >>= fun x -> ret (isVowel x)
+        | IsConsonant c -> charEval c >>= fun x -> ret (not (isVowel x)) //Does it need to check if isLetter?
+        //| IsLetter c -> charEval c >>= fun x -> ret (isLetter x)     
+        //| IsDigit c -> charEval c >>= fun x -> ret (isDigit x)  These two cases are in ass6 but not here?
 
 
     type stm =                (* statements *)

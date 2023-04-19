@@ -46,6 +46,8 @@ module State =
         dict          : ScrabbleUtil.Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
+        //noPlayers     : uint32
+        //playerInTurn  : uint32?
     }
 
     let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h }
@@ -54,6 +56,9 @@ module State =
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
+    
+    //let noPlayers st = st.noPlayers
+    //let playerInTurn st = st.playerInTurn
 
 module Scrabble =
     open System.Threading

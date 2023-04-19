@@ -80,9 +80,9 @@ module internal Eval
 
     let isVowel c = List.contains (System.Char.ToLower c) ['a'; 'e'; 'i'; 'o'; 'u'; 'y']
     
-    //let isLetter c = System.Char.IsLetter c
+    let isLetter c = System.Char.IsLetter c
 
-    //let isDigit c = System.Char.IsDigit c
+    let isDigit c = System.Char.IsDigit c
     let rec boolEval b : SM<bool> =
         match b with
         | TT -> ret true                
@@ -92,9 +92,9 @@ module internal Eval
         | Not b -> boolEval b >>= fun x -> ret (not x)
         | Conj (x,y) -> boolEval x >>= fun x -> boolEval y >>= fun y -> ret (x && y) 
         | IsVowel c -> charEval c >>= fun x -> ret (isVowel x)
-        | IsConsonant c -> charEval c >>= fun x -> ret (not (isVowel x)) //Does it need to check if isLetter?
+        | IsConsonant c -> charEval c >>= fun x -> ret (not (isVowel x))
         //| IsLetter c -> charEval c >>= fun x -> ret (isLetter x)     
-        //| IsDigit c -> charEval c >>= fun x -> ret (isDigit x)  These two cases are in ass6 but not here?
+        //| IsDigit c -> charEval c >>= fun x -> ret (isDigit x)
 
 
     type stm =                (* statements *)

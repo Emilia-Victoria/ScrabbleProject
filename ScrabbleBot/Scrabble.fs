@@ -85,14 +85,9 @@ module Scrabble =
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
                 let st' = mkState st.board st.dict st.playerNumber (
-                (* List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms) 
-                |> fold (fun acc elem x -> acc) st.hand) *)
                     let listOfID = List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms
-                    //let newTiles = List.fold (fun acc (id,n) -> acc @ [(id,n)]) List.Empty newPieces
                     let tmpHand = fold (fun acc key value -> if List.contains key listOfID then (removeSingle key acc) else acc) st.hand st.hand
                     List.fold (fun acc tile -> add (fst tile) (snd tile) acc) tmpHand newPieces)
-                
-                // This state needs to be updated
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)

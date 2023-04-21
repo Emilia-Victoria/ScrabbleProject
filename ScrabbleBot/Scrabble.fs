@@ -62,6 +62,8 @@ module State =
 
 module Scrabble =
     open System.Threading
+    open State
+    open MultiSet
 
     let playGame cstream pieces (st : State.state) =
 
@@ -82,7 +84,12 @@ module Scrabble =
             match msg with
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
-                let st' = st // This state needs to be updated
+                let st' = mkState st.board st.dict st.playerNumber (
+                (* List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms) 
+                |> fold (fun acc elem x -> acc) st.hand) *)
+                    let listOfID = List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms
+                fold (fun acc key value -> if List.contains key listOfID then (removeSingle key acc) else acc) st.hand st.hand)
+                // This state needs to be updated
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
@@ -91,7 +98,7 @@ module Scrabble =
             | RCM (CMPlayFailed (pid, ms)) ->
                 (* Failed play. Update your state *)
                 let st' = st // This state needs to be updated
-                aux st'
+                aux st'00
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err -> printfn "Gameplay Error:\n%A" err; aux st

@@ -10,7 +10,7 @@ module internal MultiSet
     let numItems a (M s) = if (Map.containsKey a s) then (Map.find a s) else uint32(0)
     let add a n (M s) = M(Map.add a (numItems a (M s) + n) s)
     let addSingle a (M s) = M(Map.add a (uint32(1)) s)
-    let remove a n (M s) = if ((numItems a (M s)) < n)
+    let remove a n (M s) = if ((numItems a (M s)) <= n)
                            then M(Map.remove a s)
                            else M(Map.add a (numItems a (M s) - n) s)
     let removeSingle a (M s) = if contains a (M s)

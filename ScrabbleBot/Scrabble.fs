@@ -88,7 +88,10 @@ module Scrabble =
                 (* List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms) 
                 |> fold (fun acc elem x -> acc) st.hand) *)
                     let listOfID = List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms
-                fold (fun acc key value -> if List.contains key listOfID then (removeSingle key acc) else acc) st.hand st.hand)
+                    //let newTiles = List.fold (fun acc (id,n) -> acc @ [(id,n)]) List.Empty newPieces
+                    let tmpHand = fold (fun acc key value -> if List.contains key listOfID then (removeSingle key acc) else acc) st.hand st.hand
+                    List.fold (fun acc tile -> add (fst tile) (snd tile) acc) tmpHand newPieces)
+                
                 // This state needs to be updated
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->

@@ -59,6 +59,12 @@ module Scrabble =
     open System.Threading
     open State
     open MultiSet
+    open System.Collections.Generic
+
+    let updateHand (hand: MultiSet.MultiSet<uint32>) (oldTiles: uint32 list) (newTiles: uint32 list) : MultiSet.MultiSet<uint32> =
+
+        List.fold (fun acc elem  -> addSingle elem acc) (List.fold (fun acc elem -> removeSingle elem acc) MultiSet.empty oldTiles) newTiles
+
 
     let playGame cstream pieces (st : State.state) =
 
@@ -74,7 +80,7 @@ module Scrabble =
             send cstream (SMPlay move)
 
             let msg = recv cstream
-            debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
+            debugPrint (sprintf "Player %d <- Ser0ver:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
 
             match msg with
             | RCM (CMPlaySuccess(ms, points, newPieces)) ->
@@ -82,8 +88,15 @@ module Scrabble =
                 let st' = mkState st.board st.dict st.playerNumber (
                 (* List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms) 
                 |> fold (fun acc elem x -> acc) st.hand) *)
-                    let listOfID = List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms
-                fold (fun acc key value -> if List.contains key listOfID then (removeSingle key acc) else acc) st.hand st.hand)
+                
+                    let listOfID: uint32 list = List.fold (fun (acc: uint32 list) (_,(b,(_,_))) -> acc @ [b]) List.Empty ms;
+                    let listOfNewPiecesID: uint32 list = List.fold (fun (acc: uint32 list) (a,_) -> acc @ [a]) List.Empty newPieces;
+                    updateHand st.hand listOfID listOfNewPiecesID
+                )
+
+
+                 
+                   
                 // This state needs to be updated
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
@@ -93,7 +106,7 @@ module Scrabble =
             | RCM (CMPlayFailed (pid, ms)) ->
                 (* Failed play. Update your state *)
                 let st' = st // This state needs to be updated
-                aux st'00
+                aux st'
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err -> printfn "Gameplay Error:\n%A" err; aux st

@@ -46,16 +46,18 @@ module State =
         dict          : ScrabbleUtil.Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
+        playedTiles : Map<coord, char>
         //noPlayers     : uint32
         //playerInTurn  : uint32?
     }
 
-    let mkState b d pn h = {board = b; dict = d;  playerNumber = pn; hand = h }
+    let mkState b d pn h pt = {board = b; dict = d;  playerNumber = pn; hand = h; playedTiles = pt}
 
     let board st         = st.board
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
+    let playedTiles st     = st.playedTiles
     
     //let noPlayers st = st.noPlayers
     //let playerInTurn st = st.playerInTurn
@@ -74,6 +76,10 @@ module Scrabble =
             forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
             let input =  System.Console.ReadLine()
             let move = RegEx.parseMove input
+            //let move = if st.board.center
+            
+            //Check if center is occupied. If not find longest word we can make from our hand and place it.
+            //If occupied find longest word we can make taking the board into account.
 
             debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             send cstream (SMPlay move)
@@ -87,7 +93,9 @@ module Scrabble =
                 let st' = mkState st.board st.dict st.playerNumber (
                     let listOfID = List.fold (fun acc (_,(b,(_,_))) -> acc @ [b]) List.Empty ms
                     let tmpHand = fold (fun acc key value -> if List.contains key listOfID then (removeSingle key acc) else acc) st.hand st.hand
-                    List.fold (fun acc tile -> add (fst tile) (snd tile) acc) tmpHand newPieces)
+                    List.fold (fun acc tile -> add (fst tile) (snd tile) acc) tmpHand newPieces) (
+                    st.playedTiles //TODO change value
+                    )
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
@@ -127,6 +135,7 @@ module Scrabble =
         let board = Parser.mkBoard boardP
                   
         let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
+        let pTiles = Map.empty
 
-        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet)
+        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet pTiles)
         

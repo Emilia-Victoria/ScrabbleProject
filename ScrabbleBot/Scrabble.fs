@@ -6,7 +6,7 @@ open ScrabbleUtil.ServerCommunication
 open System.IO
 
 open ScrabbleUtil.DebugPrint
-
+open Parser
 // The RegEx module is only used to parse human input. It is not used for the final product.
 
 module RegEx =
@@ -79,14 +79,36 @@ module Scrabble =
             // remove the force print when you move on from manual input (or when you have learnt the format)
             forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
             let input =  System.Console.ReadLine()
-            let rec FindWord (hand: st.hand) (curWord: string) : String =
-                match hand with
-                | hand -> ScrabbleUtil.Dictionary.step   
-                | _ -> if (ScrabbleUtil.Dictionary.lookup curWord = true) then curWord else FindWord st.hand curWord
+            
+            //let rec FindWord (hand: st.hand) (curWord: string) : String =
+            //    match hand with
+            //    | hand -> ScrabbleUtil.Dictionary.step   
+            //    | _ -> if (ScrabbleUtil.Dictionary.lookup curWord = true) then curWord else FindWord st.hand curWord 
+            let convertIdToChar (id: uint32) = char(int32(id) + int32('a') - 1)
+            let convertCharToId (c: char) = uint32(int32(c) - int32('a') + 1)
+
+             
+            let startGame =
+                let rec aux dict hand =
+                    List.fold (fun word c ->
+                        let x = Dictionary.step c dict
+                        match x with
+                        //| None -> acc
+                        | Some (b,d) when b = false -> aux dict (removeSingle (convertCharToId c) hand)
+                        | _ -> word
+                        //call step with c
+                        // match c with some/none
+                        // if none - stop fold/return acc
+                        // if some - update word, call aux again without used tile
+                        // check if word is longer than previous
+                        // if no more tiles + no word = skip turn
+                        ) "" (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
+                aux st.dict st.hand
                 
+            let chooseMove = ""
 
             //let move = RegEx.parseMove input
-            let move = if (st.playedTiles = Map.empty) then
+            let move = if (st.playedTiles = Map.empty) then startGame else chooseMove
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.

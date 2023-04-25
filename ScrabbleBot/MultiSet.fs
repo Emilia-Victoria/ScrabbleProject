@@ -19,3 +19,6 @@ module internal MultiSet
     let fold f acc (M s) = Map.fold f acc s
     
     let foldBack f (M s) acc = Map.foldBack f s acc
+
+    let ofList lst = List.fold (fun acc n -> addSingle n acc) empty lst
+    let toList m = fold (fun acc n num -> List.init (int32 num) (fun _ -> n)@ acc) [] m

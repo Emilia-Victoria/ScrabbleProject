@@ -106,9 +106,8 @@ module Scrabble =
                 aux st.dict st.hand
                 
             let chooseMove = ""
-
-            //let move = RegEx.parseMove input
-            let move = if (st.playedTiles = Map.empty) then startGame else chooseMove
+            let move = RegEx.parseMove input
+            //let move = if (st.playedTiles = Map.empty) then startGame else chooseMove
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.

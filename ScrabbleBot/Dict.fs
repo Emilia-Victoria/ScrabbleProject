@@ -7,9 +7,10 @@ module internal Dict
         function
         | Leaf _ when s.Length = 0 -> Leaf true
         | Node (_, dict) when s.Length = 0 -> Node (true, dict)
-        | Leaf b -> Node (b, (insert s.[1..] (empty())))
+        | Leaf b -> Node (b, Map.empty |> Map.add s.[0] (insert s.[1..] (empty())))
         | Node (b, dict) ->
             match Map.tryFind s.[0] dict with
             |None -> Node(b, Map.add s.[0] (insert s.[1..] (empty())) dict)
+            //|Some d ->
     let lookup s dict = true
     let step c dict = 0

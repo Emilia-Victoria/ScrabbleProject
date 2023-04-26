@@ -88,7 +88,7 @@ module Scrabble =
             let convertCharToId (c: char) = uint32(int32(c) - int32('a') + 1)
 
              
-            let startGame =
+            let firstMove =
                 let rec aux dict hand =
                     List.fold (fun word c ->
                         let x = Dictionary.step c dict
@@ -107,7 +107,7 @@ module Scrabble =
                 
             let chooseMove = ""
             let move = RegEx.parseMove input
-            //let move = if (st.playedTiles = Map.empty) then startGame else chooseMove
+            //let move = if (st.playedTiles = Map.empty) then firstMove else chooseMove
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.

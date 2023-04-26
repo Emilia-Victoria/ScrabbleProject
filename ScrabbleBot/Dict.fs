@@ -11,6 +11,6 @@ module internal Dict
         | Node (b, dict) ->
             match Map.tryFind s.[0] dict with
             |None -> Node(b, Map.add s.[0] (insert s.[1..] (empty())) dict)
-            //|Some d ->
+            //|Some d -> Node(b, )
     let lookup s dict = true
     let step c dict = 0

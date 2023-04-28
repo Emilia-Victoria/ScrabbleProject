@@ -75,6 +75,7 @@ module Scrabble =
 
         let rec aux (st : State.state) =
             Print.printHand pieces (State.hand st)
+            
 
             // remove the force print when you move on from manual input (or when you have learnt the format)
             forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
@@ -88,24 +89,28 @@ module Scrabble =
             let convertCharToId (c: char) = uint32(int32(c) - int32('a') + 1)
 
              
-            let startGame =
+            let firstMove =
                 let rec aux dict hand =
-                    List.fold (fun word c ->
-                        let x = Dictionary.step c dict
-                        match x with
-                        //| None -> acc
-                        | Some (b,d) when b = false -> aux dict (removeSingle (convertCharToId c) hand)
-                        | _ -> word
+                    List.fold (fun (word: list<char>) c ->
+                        match ScrabbleUtil.Dictionary.step c dict with
+                        | None -> 
+                            printfn"%c" c
+                            word
+                        | Some (b,_) when b = false -> 
+                            let newWord = (word @ [c]) 
+                            aux dict (removeSingle (convertCharToId c) hand)
+                        | Some(_,_) -> failwith "Not Implemented"
                         //call step with c
                         // match c with some/none
                         // if none - stop fold/return acc
                         // if some - update word, call aux again without used tile
                         // check if word is longer than previous
                         // if no more tiles + no word = skip turn
-                        ) "" (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
+                        ) list.Empty (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
                 aux st.dict st.hand
                 
             let chooseMove = ""
+            debugPrint (System.String.Concat(Array.ofList(firstMove)))
             let move = RegEx.parseMove input
             //let move = if (st.playedTiles = Map.empty) then startGame else chooseMove
             

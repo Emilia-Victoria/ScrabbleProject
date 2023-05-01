@@ -85,32 +85,46 @@ module Scrabble =
             //    match hand with
             //    | hand -> ScrabbleUtil.Dictionary.step   
             //    | _ -> if (ScrabbleUtil.Dictionary.lookup curWord = true) then curWord else FindWord st.hand curWord 
-            let convertIdToChar (id: uint32) = char(int32(id) + int32('a') - 1)
-            let convertCharToId (c: char) = uint32(int32(c) - int32('a') + 1)
+            let convertIdToChar (id: uint32) = char(int32(id) + int32('A') - 1)
+            let convertCharToId (c: char) = uint32(int32(c) - int32('A') + 1)   
 
-             
-            let firstMove =
-                let rec aux dict hand =
-                    List.fold (fun (word: list<char>) c ->
-                        match ScrabbleUtil.Dictionary.step c dict with
+            let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
+
+(*             let firstMove : list<char> =
+                let rec aux dict charHand (curWord: list<char>)  =
+                        let c = List.head charHand
+                        match Dictionary.step c dict with
                         | None -> 
-                            printfn"%c" c
-                            word
-                        | Some (b,_) when b = false -> 
-                            let newWord = (word @ [c]) 
-                            aux dict (removeSingle (convertCharToId c) hand)
-                        | Some(_,_) -> failwith "Not Implemented"
-                        //call step with c
-                        // match c with some/none
-                        // if none - stop fold/return acc
-                        // if some - update word, call aux again without used tile
-                        // check if word is longer than previous
-                        // if no more tiles + no word = skip turn
-                        ) list.Empty (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
-                aux st.dict st.hand
+                            //when done, return word
+                            curWord
+                        | Some (b,tempDict) when b = false -> 
+                            //when next char/node doesn't terminate, continue
+                            aux tempDict (List.tail charHand) (curWord @ [c])
+                        | Some(b,_) when b = true ->
+                            //return curWord if is a valid word
+                            curWord
+                        | Some(value) -> failwith "Not Implemented"
+                aux st.dict (charHand st.hand) list.Empty *)
                 
+            let firstMove : list<char> =
+                let rec aux dict charHand (curWord: list<char>)  =
+                        List.fold ()
+                        let c = List.head charHand
+                        match Dictionary.step c dict with
+                        | None -> 
+                            //when done, return word
+                            curWord
+                        | Some (b,tempDict) when b = false -> 
+                            //when next char/node doesn't terminate, continue
+                            aux tempDict (List.tail charHand) (curWord @ [c])
+                        | Some(b,_) when b = true ->
+                            //return curWord if is a valid word
+                            curWord
+                        | Some(value) -> failwith "Not Implemented"
+                aux st.dict (charHand st.hand) list.Empty
+
             let chooseMove = ""
-            debugPrint (System.String.Concat(Array.ofList(firstMove)))
+            printfn$"%s{System.String.Concat(Array.ofList(firstMove))}"
             let move = RegEx.parseMove input
             //let move = if (st.playedTiles = Map.empty) then startGame else chooseMove
             

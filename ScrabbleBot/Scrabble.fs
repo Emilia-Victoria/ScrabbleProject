@@ -7,6 +7,7 @@ open System.IO
 
 open ScrabbleUtil.DebugPrint
 open Parser
+open StateMonad
 // The RegEx module is only used to parse human input. It is not used for the final product.
 
 module RegEx =
@@ -67,10 +68,13 @@ module Scrabble =
     open State
     open MultiSet
 
-    let updateHand (hand: MultiSet.MultiSet<uint32>) (oldTiles: uint32 list) (newTiles: uint32 list) : MultiSet.MultiSet<uint32> =
-
-        List.fold (fun acc elem  -> addSingle elem acc) (List.fold (fun acc elem -> removeSingle elem acc) MultiSet.empty oldTiles) newTiles
-
+    let updateHand (hand: MultiSet.MultiSet<uint32>) (usedTiles: uint32 list) (newTiles: (uint32*uint32) list) : MultiSet.MultiSet<uint32> =
+        printfn "%A" (MultiSet.toList hand)
+        printfn "%A" (usedTiles)
+        printfn "%A" (newTiles)
+        let handAfterRemove = List.fold (fun (h:MultiSet<uint32>) (a:uint32)-> MultiSet.removeSingle a h) hand usedTiles
+        let handAfterInsert = List.fold (fun (h:MultiSet<uint32>) (a:uint32*uint32)-> MultiSet.add (fst a) (snd a) h) handAfterRemove newTiles
+        handAfterInsert
     let bestWord l1 l2 = if List.length l1 > List.length l2 then l1 else l2
     
     type Direction =
@@ -130,6 +134,7 @@ module Scrabble =
                                 //let newHand = (List.removeAt (List.findIndex (fun c -> c = c) charHand) charHand)
                                 let updatedHand = removeSingle id hand
                                 let tile = Map.find id pieces |> Set.toList |> List.head
+                                if isSurrounded coord dir st then word else
                                 let c = fst tile
                                 match Dictionary.step c dict with
                                 | None -> 
@@ -173,6 +178,7 @@ module Scrabble =
             let chooseMove = ""
             //let move = RegEx.parseMove input
             let move =
+                
                 if Map.isEmpty st.playedTiles
                 then
                     let moveRight = makeMove (0,0) Right st pieces
@@ -182,7 +188,7 @@ module Scrabble =
                     let moveRight = Map.fold (fun acc key _ -> if isStartSurrounded key Right st then acc else makeMove key Right st pieces |> bestWord acc) [] st.playedTiles
                     let moveDown = Map.fold (fun acc key _ -> if isStartSurrounded key Down st then acc else makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
                     bestWord moveRight moveDown
-        
+                //TODO Add call to SMChange if no valid move
 
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
@@ -199,11 +205,12 @@ module Scrabble =
                 (* Successful play by you. Update your state (remove old tiles, add the new ones, change turn, etc) *)
                 let st' = mkState st.board st.dict st.playerNumber (
                     //St.Hand
-                    let listOfID: uint32 list = List.fold (fun (acc: uint32 list) (_,(b,(_,_))) -> acc @ [b]) List.Empty ms;
-                    let listOfNewPiecesID: uint32 list = List.fold (fun (acc: uint32 list) (a,_) -> acc @ [a]) List.Empty newPieces;
+                    let listOfID: uint32 list = List.fold (fun (acc: uint32 list) (_,(b,(_,_))) -> acc @ [b]) List.Empty ms
+                    let listOfNewPiecesID: (uint32*uint32) list = List.fold (fun (acc: (uint32*uint32) list) a -> acc @ [a]) List.Empty newPieces
                     updateHand st.hand listOfID listOfNewPiecesID) (
                     //St.PlayedTiles
-                    List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms)                    
+                    List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms)
+                
                 aux st'
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)

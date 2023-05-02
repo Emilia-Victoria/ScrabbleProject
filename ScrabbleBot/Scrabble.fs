@@ -82,6 +82,46 @@ module Scrabble =
         | Right -> (x+1,y)
         | Down -> (x, y+1)
     
+    let isStartSurrounded (x,y) dir st =
+        match dir with
+        | Right ->
+            match Map.tryFind (x-1, y) st.playedTiles with
+            | Some _ -> true
+            | None ->
+                match Map.tryFind (x+1, y) st.playedTiles with
+                | Some _ -> true
+                | None -> false
+        | Down ->
+            match Map.tryFind (x, y-1) st.playedTiles with
+            | Some _ -> true
+            | None ->
+                match Map.tryFind (x, y+1) st.playedTiles with
+                | Some _ -> true
+                | None -> false
+    
+    let isSurrounded (x,y) dir st =
+        match dir with
+        | Right ->
+            match Map.tryFind (x+1, y) st.playedTiles with
+            | Some _ -> true
+            | None ->
+                match Map.tryFind (x,y+1) st.playedTiles with
+                | Some _ -> true
+                | None ->
+                    match Map.tryFind (x, y-1) st.playedTiles with
+                    | Some _ -> true
+                    | None -> false
+        | Down ->
+            match Map.tryFind (x+1, y) st.playedTiles with
+            | Some _ -> true
+            | None ->
+                match Map.tryFind (x-1,y) st.playedTiles with
+                | Some _ -> true
+                | None ->
+                    match Map.tryFind (x, y+1) st.playedTiles with
+                    | Some _ -> true
+                    | None -> false
+    
     let makeMove coord dir st pieces =
                 let rec aux dict hand curWord longestWord coord dir =
                     match Map.tryFind coord st.playedTiles with
@@ -139,8 +179,8 @@ module Scrabble =
                     let moveDown = makeMove (0,0) Down st pieces
                     bestWord moveRight moveDown
                 else
-                    let moveRight = Map.fold (fun acc key _ -> makeMove key Right st pieces |> bestWord acc) [] st.playedTiles
-                    let moveDown = Map.fold (fun acc key _ -> makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
+                    let moveRight = Map.fold (fun acc key _ -> if isStartSurrounded key Right st then acc else makeMove key Right st pieces |> bestWord acc) [] st.playedTiles
+                    let moveDown = Map.fold (fun acc key _ -> if isStartSurrounded key Down st then acc else makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
                     bestWord moveRight moveDown
         
 

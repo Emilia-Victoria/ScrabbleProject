@@ -1,4 +1,4 @@
-﻿namespace EmyIsGr8tttt
+namespace EmyIsGr8tttt
 
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
@@ -71,10 +71,50 @@ module Scrabble =
 
         List.fold (fun acc elem  -> addSingle elem acc) (List.fold (fun acc elem -> removeSingle elem acc) MultiSet.empty oldTiles) newTiles
 
+    let bestWord l1 l2 = if List.length l1 > List.length l2 then l1 else l2
+    
+    type Direction =
+        |Right
+        |Down
+    
+    let nextCoord (x,y) dir =
+        match dir with
+        | Right -> (x+1,y)
+        | Down -> (x, y+1)
+    
+    let makeMove coord dir st pieces =
+                let rec aux dict hand curWord longestWord coord dir =
+                    match Map.tryFind coord st.playedTiles with
+                    | None -> 
+                        MultiSet.fold (fun word id _ ->
+                                //let newHand = (List.removeAt (List.findIndex (fun c -> c = c) charHand) charHand)
+                                let updatedHand = removeSingle id hand
+                                let tile = Map.find id pieces |> Set.toList |> List.head
+                                let c = fst tile
+                                match Dictionary.step c dict with
+                                | None -> 
+                                    word
+                                | Some (false,tempDict) -> 
+                                    //if not a word, continue
+                                    let curWordUpdated = curWord @ [(coord,(id,tile))]
+                                    aux tempDict updatedHand curWordUpdated word (nextCoord coord dir) dir
+                                | Some(true,tempDict) ->
+                                    //return curWord if is a valid word
+                                    let curWordUpdated = curWord @ [(coord,(id,tile))]
+                                    let longest = bestWord curWordUpdated longestWord 
+                                    aux tempDict updatedHand curWordUpdated longest (nextCoord coord dir) dir
+                        ) longestWord hand
+                    | Some cv ->
+                        match Dictionary.step cv dict with
+                        | None -> longestWord
+                        | Some (_,tempDict) -> aux tempDict hand curWord longestWord (nextCoord coord dir) dir
+                aux st.dict st.hand List.Empty List.Empty coord dir
+    
     let playGame cstream pieces (st : State.state) =
 
         let rec aux (st : State.state) =
             Print.printHand pieces (State.hand st)
+            
 
             // remove the force print when you move on from manual input (or when you have learnt the format)
             forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
@@ -84,30 +124,26 @@ module Scrabble =
             //    match hand with
             //    | hand -> ScrabbleUtil.Dictionary.step   
             //    | _ -> if (ScrabbleUtil.Dictionary.lookup curWord = true) then curWord else FindWord st.hand curWord 
-            let convertIdToChar (id: uint32) = char(int32(id) + int32('a') - 1)
-            let convertCharToId (c: char) = uint32(int32(c) - int32('a') + 1)
 
-             
-            let firstMove =
-                let rec aux dict hand =
-                    List.fold (fun word c ->
-                        let x = Dictionary.step c dict
-                        match x with
-                        //| None -> acc
-                        | Some (b,d) when b = false -> aux dict (removeSingle (convertCharToId c) hand)
-                        | _ -> word
-                        //call step with c
-                        // match c with some/none
-                        // if none - stop fold/return acc
-                        // if some - update word, call aux again without used tile
-                        // check if word is longer than previous
-                        // if no more tiles + no word = skip turn
-                        ) "" (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
-                aux st.dict st.hand
-                
+            let convertIdToChar (id: uint32) = char(int32(id) + int32('A') - 1)
+            let convertCharToId (c: char) = uint32(int32(c) - int32('A') + 1)   
+
+            //let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))        
+
             let chooseMove = ""
-            let move = RegEx.parseMove input
-            //let move = if (st.playedTiles = Map.empty) then firstMove else chooseMove
+            //let move = RegEx.parseMove input
+            let move =
+                if Map.isEmpty st.playedTiles
+                then
+                    let moveRight = makeMove (0,0) Right st pieces
+                    let moveDown = makeMove (0,0) Down st pieces
+                    bestWord moveRight moveDown
+                else
+                    let moveRight = Map.fold (fun acc key _ -> makeMove key Right st pieces |> bestWord acc) [] st.playedTiles
+                    let moveDown = Map.fold (fun acc key _ -> makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
+                    bestWord moveRight moveDown
+        
+
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.

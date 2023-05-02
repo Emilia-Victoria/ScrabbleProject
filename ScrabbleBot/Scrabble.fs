@@ -71,6 +71,45 @@ module Scrabble =
 
         List.fold (fun acc elem  -> addSingle elem acc) (List.fold (fun acc elem -> removeSingle elem acc) MultiSet.empty oldTiles) newTiles
 
+    let bestWord l1 l2 = if List.length l1 > List.length l2 then l1 else l2
+    
+    type Direction =
+        |Right
+        |Down
+    
+    let nextCoord (x,y) dir =
+        match dir with
+        | Right -> (x+1,y)
+        | Down -> (x, y+1)
+    
+    let makeMove coord dir st pieces =
+                let rec aux dict hand curWord longestWord coord dir =
+                    match Map.tryFind coord st.playedTiles with
+                    | None -> 
+                        MultiSet.fold (fun word id _ ->
+                                //let newHand = (List.removeAt (List.findIndex (fun c -> c = c) charHand) charHand)
+                                let updatedHand = removeSingle id hand
+                                let tile = Map.find id pieces |> Set.toList |> List.head
+                                let c = fst tile
+                                match Dictionary.step c dict with
+                                | None -> 
+                                    word
+                                | Some (false,tempDict) -> 
+                                    //if not a word, continue
+                                    let curWordUpdated = curWord @ [(coord,(id,tile))]
+                                    aux tempDict updatedHand curWordUpdated word (nextCoord coord dir) dir
+                                | Some(true,tempDict) ->
+                                    //return curWord if is a valid word
+                                    let curWordUpdated = curWord @ [(coord,(id,tile))]
+                                    let longest = bestWord curWordUpdated longestWord 
+                                    aux tempDict updatedHand curWordUpdated longest (nextCoord coord dir) dir
+                        ) longestWord hand
+                    | Some cv ->
+                        match Dictionary.step cv dict with
+                        | None -> longestWord
+                        | Some (_,tempDict) -> aux tempDict hand curWord longestWord (nextCoord coord dir) dir
+                aux st.dict st.hand List.Empty List.Empty coord dir
+    
     let playGame cstream pieces (st : State.state) =
 
         let rec aux (st : State.state) =
@@ -88,65 +127,24 @@ module Scrabble =
             let convertIdToChar (id: uint32) = char(int32(id) + int32('A') - 1)
             let convertCharToId (c: char) = uint32(int32(c) - int32('A') + 1)   
 
-            let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
+            //let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
 
-(*             let firstMove : list<char> =
-                let rec aux dict charHand (curWord: list<char>)  =
-                        let c = List.head charHand
-                        match Dictionary.step c dict with
-                        | None -> 
-                            //when done, return word
-                            curWord
-                        | Some (b,tempDict) when b = false -> 
-                            //when next char/node doesn't terminate, continue
-                            aux tempDict (List.tail charHand) (curWord @ [c])
-                        | Some(b,_) when b = true ->
-                            //return curWord if is a valid word
-                            curWord
-                        | Some(value) -> failwith "Not Implemented"
-                aux st.dict (charHand st.hand) list.Empty *)
-
-            let firstMove: list<char> =
-                let rec aux dict charHand (curWord: list<char>) (longestWord: list<char>) =
-                    List.foldBack (fun c (word: list<char>) ->
-                            let newHand = (List.removeAt (List.findIndex (fun c -> c = c) charHand) charHand)
-                            match Dictionary.step c dict with
-                            | None -> 
-                                word
-                            | Some (false,tempDict) -> 
-                                //when next char/node doesn't terminate, continue
-                                let curWordUpdated = curWord @ [c]
-                                aux tempDict newHand curWordUpdated word 
-                            | Some(true,tempdict) ->
-                                //return curWord if is a valid word
-                                let curWordUpdated = curWord @ [c]
-                                if curWordUpdated.Length > longestWord.Length 
-                                then aux tempdict newHand curWordUpdated curWordUpdated 
-                                else aux tempdict newHand curWordUpdated longestWord 
-                    ) charHand longestWord
-                aux st.dict (charHand st.hand) List.Empty List.Empty 
-
-(*             let findMoves: list<char> = 
-                let rec aux dict (hand: list<char>) (curWord: list<char>) (bestWord: list<char>) =
-                    List.fold (fun _ c ->
-                        match Dictionary.step c dict with
-                        | Some (true, tmpDict) ->
-                            if curWord.Length >= bestWord.Length
-                            then 
-                                printfn$"%s{System.String.Concat(Array.ofList(curWord))}" 
-                                aux tmpDict (List.removeAt (List.findIndex (fun c -> c = c) hand) hand) (curWord @ [c]) (curWord @ [c]) 
-                            else aux tmpDict (List.removeAt (List.findIndex (fun c -> c = c) hand) hand) (curWord @ [c]) bestWord
-                        | Some (false, tmpDict) ->
-                            aux tmpDict (List.removeAt (List.findIndex (fun c -> c = c) hand) hand) (curWord @ [c]) bestWord
-                        | None -> List.Empty
-                    ) hand curWord
-                aux st.dict (charHand st.hand) List.Empty List.Empty *)
-
+            
+            
 
             let chooseMove = ""
-            printfn$"%s{System.String.Concat(Array.ofList(firstMove))}"
             //let move = RegEx.parseMove input
-            let move = if (st.playedTiles = Map.empty) then firstMove else chooseMove
+            let move =
+                if Map.isEmpty st.playedTiles
+                then
+                    let moveRight = makeMove (0,0) Right st pieces
+                    let moveDown = makeMove (0,0) Down st pieces
+                    bestWord moveRight moveDown
+                else
+                    let moveRight = Map.fold (fun acc key _ -> makeMove key Right st pieces |> bestWord acc) [] st.playedTiles
+                    let moveDown = Map.fold (fun acc key _ -> makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
+                    bestWord moveRight moveDown
+        
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.

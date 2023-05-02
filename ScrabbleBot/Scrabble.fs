@@ -1,4 +1,4 @@
-﻿namespace EmyIsGr8tttt
+namespace EmyIsGr8tttt
 
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
@@ -124,13 +124,11 @@ module Scrabble =
             //    match hand with
             //    | hand -> ScrabbleUtil.Dictionary.step   
             //    | _ -> if (ScrabbleUtil.Dictionary.lookup curWord = true) then curWord else FindWord st.hand curWord 
+
             let convertIdToChar (id: uint32) = char(int32(id) + int32('A') - 1)
             let convertCharToId (c: char) = uint32(int32(c) - int32('A') + 1)   
 
-            //let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))
-
-            
-            
+            //let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))        
 
             let chooseMove = ""
             //let move = RegEx.parseMove input
@@ -145,6 +143,7 @@ module Scrabble =
                     let moveDown = Map.fold (fun acc key _ -> makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
                     bestWord moveRight moveDown
         
+
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.

@@ -196,7 +196,7 @@ module Scrabble =
                 if List.isEmpty move
                 then
                     if MultiSet.size st.hand < 7u
-                    then SMPlay move
+                    then SMPlay move //Causes the bot the play an emptyMove which will cause the game to end after three turns. Ideally we would just end the game.
                     else SMChange (handToIDLst st.hand)
                 else SMPlay move)
 

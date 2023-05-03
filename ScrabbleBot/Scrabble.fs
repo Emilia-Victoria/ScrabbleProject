@@ -48,16 +48,18 @@ module State =
         dict          : ScrabbleUtil.Dictionary.Dict
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
-        playedTiles : Map<coord, char>
+        playedTiles   : Map<coord, char>
+        amountTiles    : uint32 
     }
 
-    let mkState b d pn h pt = {board = b; dict = d;  playerNumber = pn; hand = h; playedTiles = pt}
+    let mkState b d pn h pt at = {board = b; dict = d;  playerNumber = pn; hand = h; playedTiles = pt; amountTiles = at}
 
     let board st         = st.board
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
     let playedTiles st     = st.playedTiles
+    let amountTiles st = st.amountTiles 
 
 module Scrabble =
     open System.Threading
@@ -191,8 +193,16 @@ module Scrabble =
 
             debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
             send cstream (
-                if List.isEmpty move then SMChange (handToIDLst st.hand) else SMPlay move)
+                if List.isEmpty move
+                then
+                    if MultiSet.size st.hand < 7u
+                    then SMPlay move
+                    else SMChange (handToIDLst st.hand)
+                else SMPlay move)
 
+            //If hand under 7 tiles - We can't change tiles
+            
+            
             let msg = recv cstream
             debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
 
@@ -205,11 +215,11 @@ module Scrabble =
                     let listOfNewPiecesID: (uint32*uint32) list = List.fold (fun (acc: (uint32*uint32) list) a -> acc @ [a]) List.Empty newPieces
                     updateHand st.hand listOfID listOfNewPiecesID) (
                     //St.PlayedTiles
-                    List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms)
+                    List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms) st.amountTiles
                 
                 aux st'
             | RCM (CMChangeSuccess newTiles) ->
-                let st' = mkState st.board st.dict st.playerNumber (updateHand MultiSet.empty List.Empty newTiles) st.playedTiles
+                let st' = mkState st.board st.dict st.playerNumber (updateHand MultiSet.empty List.Empty newTiles) st.playedTiles st.amountTiles
                 aux st'
                 
             | RCM (CMPlayed (pid, ms, points)) ->
@@ -252,5 +262,5 @@ module Scrabble =
         let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
         let pTiles = Map.empty
  
-        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet pTiles )
+        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet pTiles (uint32(Map.count tiles)) )
         

@@ -196,11 +196,12 @@ module Scrabble =
                 if List.isEmpty move
                 then
                     if MultiSet.size st.hand < 7u
-                    then SMPlay move //Causes the bot the play an emptyMove which will cause the game to end after three turns. Ideally we would just end the game.
-                    else SMChange (handToIDLst st.hand)
+                    then SMPass
+                    else
+                        let freeTiles = int(st.amountTiles - (MultiSet.size st.hand) - uint32(Map.count st.playedTiles))
+                        let hand = handToIDLst st.hand
+                        SMChange (hand.[0..freeTiles])
                 else SMPlay move)
-
-            //If hand under 7 tiles - We can't change tiles
             
             
             let msg = recv cstream
@@ -230,6 +231,7 @@ module Scrabble =
                 (* Failed play. Update your state *)
                 let st' = st // This state needs to be updated
                 aux st'
+            | RCM (CMPassed _) -> aux st
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
             | RGPE err -> printfn "Gameplay Error:\n%A" err; aux st

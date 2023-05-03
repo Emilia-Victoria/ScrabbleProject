@@ -1,4 +1,4 @@
-namespace EmyIsGr8tttt
+﻿namespace EmyIsGr8tttt
 
 open MultiSet
 open ScrabbleUtil
@@ -69,7 +69,7 @@ module Scrabble =
         let handAfterInsert = List.fold (fun (h:MultiSet<uint32>) (a:uint32*uint32)-> MultiSet.add (fst a) (snd a) h) handAfterRemove newTiles
         handAfterInsert
     
-    let handToIDLst (hand :MultiSet.MultiSet<uint32>): uint32 list = MultiSet.fold (fun acc key -> acc @ [key] ) List.Empty hand
+    let handToIDLst (hand :MultiSet.MultiSet<uint32>): uint32 list = MultiSet.fold (fun acc key _ -> acc @ [key] ) List.Empty hand
     let bestWord l1 l2 = if List.length l1 > List.length l2 then l1 else l2
     
     type Direction =

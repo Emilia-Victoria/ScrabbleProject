@@ -1,5 +1,6 @@
 namespace EmyIsGr8tttt
 
+open MultiSet
 open ScrabbleUtil
 open ScrabbleUtil.ServerCommunication
 
@@ -48,8 +49,6 @@ module State =
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
         playedTiles : Map<coord, char>
-         //noPlayers     : uint32
-        //playerInTurn  : uint32?
     }
 
     let mkState b d pn h pt = {board = b; dict = d;  playerNumber = pn; hand = h; playedTiles = pt}
@@ -59,9 +58,6 @@ module State =
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
     let playedTiles st     = st.playedTiles
-     
-    //let noPlayers st = st.noPlayers
-    //let playerInTurn st = st.playerInTurn
 
 module Scrabble =
     open System.Threading
@@ -69,12 +65,11 @@ module Scrabble =
     open MultiSet
 
     let updateHand (hand: MultiSet.MultiSet<uint32>) (usedTiles: uint32 list) (newTiles: (uint32*uint32) list) : MultiSet.MultiSet<uint32> =
-        printfn "%A" (MultiSet.toList hand)
-        printfn "%A" (usedTiles)
-        printfn "%A" (newTiles)
         let handAfterRemove = List.fold (fun (h:MultiSet<uint32>) (a:uint32)-> MultiSet.removeSingle a h) hand usedTiles
         let handAfterInsert = List.fold (fun (h:MultiSet<uint32>) (a:uint32*uint32)-> MultiSet.add (fst a) (snd a) h) handAfterRemove newTiles
         handAfterInsert
+    
+    let handToIDLst (hand :MultiSet.MultiSet<uint32>): uint32 list = MultiSet.fold (fun acc key -> acc @ [key] ) List.Empty hand
     let bestWord l1 l2 = if List.length l1 > List.length l2 then l1 else l2
     
     type Direction =
@@ -126,12 +121,13 @@ module Scrabble =
                     | Some _ -> true
                     | None -> false
     
+  
+        
     let makeMove coord dir st pieces =
                 let rec aux dict hand curWord longestWord coord dir =
                     match Map.tryFind coord st.playedTiles with
                     | None -> 
                         MultiSet.fold (fun word id _ ->
-                                //let newHand = (List.removeAt (List.findIndex (fun c -> c = c) charHand) charHand)
                                 let updatedHand = removeSingle id hand
                                 let tile = Map.find id pieces |> Set.toList |> List.head
                                 if isSurrounded coord dir st then word else
@@ -188,14 +184,14 @@ module Scrabble =
                     let moveRight = Map.fold (fun acc key _ -> if isStartSurrounded key Right st then acc else makeMove key Right st pieces |> bestWord acc) [] st.playedTiles
                     let moveDown = Map.fold (fun acc key _ -> if isStartSurrounded key Down st then acc else makeMove key Down st pieces |> bestWord acc) [] st.playedTiles
                     bestWord moveRight moveDown
-                //TODO Add call to SMChange if no valid move
 
             
             //Check if center is occupied. If not find longest word we can make from our hand and place it.
             //If occupied find longest word we can make taking the board into account.
 
             debugPrint (sprintf "Player %d -> Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
-            send cstream (SMPlay move)
+            send cstream (
+                if List.isEmpty move then SMChange (handToIDLst st.hand) else SMPlay move)
 
             let msg = recv cstream
             debugPrint (sprintf "Player %d <- Server:\n%A\n" (State.playerNumber st) move) // keep the debug lines. They are useful.
@@ -212,6 +208,10 @@ module Scrabble =
                     List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms)
                 
                 aux st'
+            | RCM (CMChangeSuccess newTiles) ->
+                let st' = mkState st.board st.dict st.playerNumber (updateHand MultiSet.empty List.Empty newTiles) st.playedTiles
+                aux st'
+                
             | RCM (CMPlayed (pid, ms, points)) ->
                 (* Successful play by other player. Update your state *)
                 let st' = st // This state needs to be updated

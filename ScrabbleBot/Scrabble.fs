@@ -196,11 +196,9 @@ module Scrabble =
                     if MultiSet.size st.hand < 7u
                     then SMPass
                     else
-                        //if int(st.amountTiles - (MultiSet.size st.hand) - uint32(Map.count st.playedTiles)) < 7
-                        //then
-                        //SMPass
-                        //else
-                        SMChange (MultiSet.toList st.hand)
+                        if 104 - int((MultiSet.size st.hand) - uint32(Map.count st.playedTiles)) < 7
+                        then SMPass
+                        else SMChange (MultiSet.toList st.hand)
                         
                 else SMPlay move)
             
@@ -235,8 +233,7 @@ module Scrabble =
             | RCM (CMPassed _) -> aux st
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
-            | RGPE err -> //If notENoughPieces -> Pass
-            aux st
+            | RGPE err -> failwith (sprintf "not implmented: %A" err); aux st
 
 
         aux st

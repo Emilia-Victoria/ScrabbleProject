@@ -158,21 +158,12 @@ module Scrabble =
             
 
             // remove the force print when you move on from manual input (or when you have learnt the format)
-            forcePrint "Input move (format '(<x-coordinate> <y-coordinate> <piece id><character><point-value> )*', note the absence of space between the last inputs)\n\n"
             let input =  System.Console.ReadLine()
             
-            //let rec FindWord (hand: st.hand) (curWord: string) : String =
-            //    match hand with
-            //    | hand -> ScrabbleUtil.Dictionary.step   
-            //    | _ -> if (ScrabbleUtil.Dictionary.lookup curWord = true) then curWord else FindWord st.hand curWord 
-
             let convertIdToChar (id: uint32) = char(int32(id) + int32('A') - 1)
             let convertCharToId (c: char) = uint32(int32(c) - int32('A') + 1)   
 
-            //let charHand hand : List<char> = (List.fold (fun acc tile -> (convertIdToChar tile) :: acc) List.empty (toList hand))        
-
             let chooseMove = ""
-            //let move = RegEx.parseMove input
             let move =
                 
                 if Map.isEmpty st.playedTiles
@@ -235,7 +226,7 @@ module Scrabble =
             | RCM (CMPassed _) -> aux st
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
-            | RGPE err -> //If notENoughPieces -> Pass
+            | RGPE err -> failwith (sprintf "not implmented: %A" err);
             aux st
 
 
@@ -258,8 +249,7 @@ module Scrabble =
                       player turn = %d
                       hand =  %A
                       timeout = %A\n\n" numPlayers playerNumber playerTurn hand timeout)
-
-        //let dict = dictf true // Uncomment if using a gaddag for your dictionary
+        
         let dict = dictf false // Uncomment if using a trie for your dictionary
         let board = Parser.mkBoard boardP
                   

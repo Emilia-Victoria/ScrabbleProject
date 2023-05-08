@@ -154,7 +154,6 @@ module Scrabble =
     let playGame cstream pieces (st : State.state) =
 
         let rec aux (st : State.state) =
-            printfn "%i" (104 - int(size st.hand) - (Map.count st.playedTiles))
             Print.printHand pieces (State.hand st)
             
 

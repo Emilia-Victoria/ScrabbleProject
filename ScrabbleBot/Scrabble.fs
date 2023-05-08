@@ -49,17 +49,15 @@ module State =
         playerNumber  : uint32
         hand          : MultiSet.MultiSet<uint32>
         playedTiles   : Map<coord, char>
-        amountTiles    : uint32 
     }
 
-    let mkState b d pn h pt at = {board = b; dict = d;  playerNumber = pn; hand = h; playedTiles = pt; amountTiles = at}
+    let mkState b d pn h pt = {board = b; dict = d;  playerNumber = pn; hand = h; playedTiles = pt}
 
     let board st         = st.board
     let dict st          = st.dict
     let playerNumber st  = st.playerNumber
     let hand st          = st.hand
-    let playedTiles st     = st.playedTiles
-    let amountTiles st = st.amountTiles 
+    let playedTiles st     = st.playedTiles 
 
 module Scrabble =
     open System.Threading
@@ -198,9 +196,12 @@ module Scrabble =
                     if MultiSet.size st.hand < 7u
                     then SMPass
                     else
-                        if int(st.amountTiles - (MultiSet.size st.hand) - uint32(Map.count st.playedTiles)) < 7
-                        then SMPass
-                        else SMChange (MultiSet.toList st.hand)
+                        //if int(st.amountTiles - (MultiSet.size st.hand) - uint32(Map.count st.playedTiles)) < 7
+                        //then
+                        //SMPass
+                        //else
+                        SMChange (MultiSet.toList st.hand)
+                        
                 else SMPlay move)
             
             
@@ -216,11 +217,11 @@ module Scrabble =
                     let listOfNewPiecesID: (uint32*uint32) list = List.fold (fun (acc: (uint32*uint32) list) a -> acc @ [a]) List.Empty newPieces
                     updateHand st.hand listOfID listOfNewPiecesID) (
                     //St.PlayedTiles
-                    List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms) st.amountTiles
+                    List.fold (fun (acc)  (a,(_,(c,_))) -> Map.add a c acc) st.playedTiles ms)
                 
                 aux st'
             | RCM (CMChangeSuccess newTiles) ->
-                let st' = mkState st.board st.dict st.playerNumber (updateHand st.hand (MultiSet.toList st.hand) newTiles) st.playedTiles st.amountTiles
+                let st' = mkState st.board st.dict st.playerNumber (updateHand st.hand (MultiSet.toList st.hand) newTiles) st.playedTiles
                 aux st'
                 
             | RCM (CMPlayed (pid, ms, points)) ->
@@ -234,7 +235,8 @@ module Scrabble =
             | RCM (CMPassed _) -> aux st
             | RCM (CMGameOver _) -> ()
             | RCM a -> failwith (sprintf "not implmented: %A" a)
-            | RGPE err -> printfn "Gameplay Error:\n%A" err; aux st
+            | RGPE err -> //If notENoughPieces -> Pass
+            aux st
 
 
         aux st
@@ -264,5 +266,5 @@ module Scrabble =
         let handSet = List.fold (fun acc (x, k) -> MultiSet.add x k acc) MultiSet.empty hand
         let pTiles = Map.empty
  
-        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet pTiles (uint32(Map.count tiles)) )
+        fun () -> playGame cstream tiles (State.mkState board dict playerNumber handSet pTiles)
         

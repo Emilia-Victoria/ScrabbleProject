@@ -220,7 +220,7 @@ module Scrabble =
                 
                 aux st'
             | RCM (CMChangeSuccess newTiles) ->
-                let st' = mkState st.board st.dict st.playerNumber (updateHand MultiSet.empty List.Empty newTiles) st.playedTiles st.amountTiles
+                let st' = mkState st.board st.dict st.playerNumber (updateHand st.hand List.Empty newTiles) st.playedTiles st.amountTiles
                 aux st'
                 
             | RCM (CMPlayed (pid, ms, points)) ->

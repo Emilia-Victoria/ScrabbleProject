@@ -198,8 +198,6 @@ module Scrabble =
                     if MultiSet.size st.hand < 7u
                     then SMPass
                     else
-                        //let freeTiles = int(st.amountTiles - (MultiSet.size st.hand) - uint32(Map.count st.playedTiles))
-                        //let hand = handToIDLst st.hand
                         SMChange (MultiSet.toList st.hand)
                 else SMPlay move)
             

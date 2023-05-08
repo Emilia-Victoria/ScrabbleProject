@@ -154,6 +154,7 @@ module Scrabble =
     let playGame cstream pieces (st : State.state) =
 
         let rec aux (st : State.state) =
+            printfn "%i" (104 - int(size st.hand) - (Map.count st.playedTiles))
             Print.printHand pieces (State.hand st)
             
 
@@ -196,11 +197,11 @@ module Scrabble =
                     if MultiSet.size st.hand < 7u
                     then SMPass
                     else
-                        //if int(st.amountTiles - (MultiSet.size st.hand) - uint32(Map.count st.playedTiles)) < 7
-                        //then
-                        //SMPass
-                        //else
-                        SMChange (MultiSet.toList st.hand)
+                        if (104 - int(size st.hand) - (Map.count st.playedTiles)) < 7
+                        then
+                            SMPass
+                        else
+                            SMChange (MultiSet.toList st.hand)
                         
                 else SMPlay move)
             
